@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Syn-Detect Live</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>html,body,#chart{height:100%;margin:0}</style>
+</head>
+<body>
+<div id="chart"></div>
+<script>
+const chart = echarts.init(document.getElementById('chart'));
+const option = {
+  title: { text: '实时 SYN 流量 (bits/s)' },
+  xAxis: { type: 'category', data: [] },
+  yAxis: { type: 'value' },
+  series: [{ type: 'line', data: [], smooth: true }]
+};
+chart.setOption(option);
+
+const ws = new WebSocket('ws://127.0.0.1:8082');
+ws.onmessage = evt => {
+  const json = JSON.parse(evt.data);
+  const bps = json.bps;
+  const now = new Date().toLocaleTimeString();
+  option.xAxis.data.push(now);
+  option.series[0].data.push(bps);
+  // 只保留最近 20 个点
+  if (option.xAxis.data.length > 20) {
+    option.xAxis.data.shift();
+    option.series[0].data.shift();
+  }
+  chart.setOption(option);
+};
+</script>
+</body>
+</html>
