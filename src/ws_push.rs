@@ -13,7 +13,11 @@ pub async fn run_server(stats_rx: tokio::sync::watch::Receiver<Stats>) {
         let mut rx = stats_rx.clone();
         while rx.changed().await.is_ok() {
             let stats = rx.borrow().clone();
-            let msg = Message::Text(json!({"bps": stats.bits_per_sec}).to_string());
+            let msg = Message::Text(json!({
+    "bps": stats.bits_per_sec,
+    "entropy": stats.entropy,
+    "alert": stats.alert
+}).to_string());
             if let Err(_) = write.send(msg).await {
     // 浏览器断开时忽略错误，继续服务其他人
 }

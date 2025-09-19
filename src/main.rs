@@ -52,7 +52,7 @@ fn old_main(tx: watch::Sender<Stats>) {
         let p = c as f32 / total_f;
         entropy -= p * p.log2();
     }
-    let alert = entropy > 7.0;
+    let alert = entropy > 2.5;
 
     // ② 再打印
     println!("=== {} syn/s  entropy={:.1}  alert={} ===", total, entropy, alert);
