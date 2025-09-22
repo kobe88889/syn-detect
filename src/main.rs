@@ -5,6 +5,7 @@ mod stats;
 mod ws_push;
 use tokio::sync::watch;
 use stats::Stats;
+use syn_detect::{calc_entropy, alert_threshold};
 
 #[tokio::main]
 async fn main() {
@@ -46,13 +47,8 @@ fn old_main(tx: watch::Sender<Stats>) {
 *counter.entry(dst).or_insert(0) += 1;
 
     // ① 先算熵
-    let total_f = total as f32;
-    let mut entropy = 0_f32;
-    for &c in counter.values() {
-        let p = c as f32 / total_f;
-        entropy -= p * p.log2();
-    }
-    let alert = entropy > 2.5;
+    let entropy = calc_entropy(&counter);
+    let alert   = alert_threshold(entropy);
 
     // ② 再打印
     println!("=== {} syn/s  entropy={:.1}  alert={} ===", total, entropy, alert);
@@ -65,7 +61,20 @@ fn old_main(tx: watch::Sender<Stats>) {
     }).ok();
 
     counter.clear();
-    last = Instant::now();
+    last = Instant::now(    );
 }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn counter_add() {
+        let mut m = HashMap::new();
+        *m.entry("1.1.1.1".to_string()).or_insert(0) += 1;
+        assert_eq!(m["1.1.1.1"], 1);
     }
 }

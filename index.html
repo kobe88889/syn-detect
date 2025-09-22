@@ -18,14 +18,26 @@ const option = {
 };
 chart.setOption(option);
 
-const ws = new WebSocket('ws://127.0.0.1:8082');
+const ws = new WebSocket('ws://127.0.0.1:8083');
 ws.onmessage = evt => {
   const json = JSON.parse(evt.data);
   const bps = json.bps;
+  const entropy = json.entropy;
+  const alert = json.alert;
   const now = new Date().toLocaleTimeString();
+
   option.xAxis.data.push(now);
   option.series[0].data.push(bps);
-  // 只保留最近 20 个点
+
+  // 红点：只要 alert=true 就画 markPoint
+  if (alert) {
+    option.series[0].markPoint = {
+      data: [{ coord: [now, bps], name: '熵>7', itemStyle: { color: 'red' } }]
+    };
+  } else {
+    option.series[0].markPoint = null;   // 清除上一红点
+  }
+
   if (option.xAxis.data.length > 20) {
     option.xAxis.data.shift();
     option.series[0].data.shift();

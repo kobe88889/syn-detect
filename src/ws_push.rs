@@ -6,7 +6,7 @@ use crate::stats::Stats;
 use futures_util::{StreamExt, SinkExt};
 
 pub async fn run_server(stats_rx: tokio::sync::watch::Receiver<Stats>) {
-    let listener = TcpListener::bind("127.0.0.1:8082").await.unwrap();
+    let listener = TcpListener::bind("127.0.0.1:8083").await.unwrap();
     while let Ok((stream, _)) = listener.accept().await {
         let ws_stream = accept_async(stream).await.unwrap();
         let (mut write, _read) = ws_stream.split();
@@ -23,5 +23,17 @@ pub async fn run_server(stats_rx: tokio::sync::watch::Receiver<Stats>) {
 }
             tokio::time::sleep(Duration::from_millis(1000)).await;
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn msg_text_construct() {
+        let m = Message::Text(r#"{"bps":100,"entropy":2.0,"alert":true}"#.to_string());
+        assert!(m.is_text());
     }
 }
